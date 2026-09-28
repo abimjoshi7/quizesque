@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.QuizMaster" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/purple_500</item>
+    </style>
+</resources>

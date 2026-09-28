@@ -1,0 +1,39 @@
+# --- Gradle build outputs ---
+.gradle/
+build/
+**/build/
+out/
+
+# --- Gradle wrapper jar (keep properties, ignore jar) ---
+!gradle/wrapper/gradle-wrapper.jar
+
+# --- Local SDK / machine-specific config ---
+local.properties
+
+# --- Android Studio / IntelliJ ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# --- Native builds ---
+.externalNativeBuild/
+.cxx/
+
+# --- Compiled app packages ---
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# --- Signing keys (never commit) ---
+*.jks
+*.keystore
+
+# --- Profiler / captures ---
+captures/
+*.hprof
+
+# --- Log / temp files ---
+*.log
