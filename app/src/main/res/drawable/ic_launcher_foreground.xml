@@ -1,0 +1,112 @@
+<!--
+  QUIZesque launcher mark.
+
+  Same construction as the in-app logo (ui/components/QuizesqueLogo.kt), weighted
+  up for launcher scale: ring radius 29 of the 108 viewport, so the stroke
+  reaches the edge of the 72dp adaptive mask instead of floating in a dark
+  gutter. Gold is lit from the upper left across the sweep, sits on a deep
+  bronze base, and carries a soft drop shadow so it reads as raised metal.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- shadow, offset down, lifting the mark off the bed -->
+    <group android:translateY="1.4">
+        <path
+            android:pathData="M64.86,80.89 A29,29 0 1 1 80.89,64.86"
+            android:strokeColor="#000000"
+            android:strokeAlpha="0.38"
+            android:strokeWidth="11.5"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M65.90,65.90 L77.11,77.11"
+            android:strokeColor="#000000"
+            android:strokeAlpha="0.38"
+            android:strokeWidth="13.6"
+            android:strokeLineCap="round" />
+    </group>
+
+    <!-- ring: deep bronze base -->
+    <path
+        android:pathData="M64.86,80.89 A29,29 0 1 1 80.89,64.86"
+        android:strokeColor="#60420E"
+        android:strokeWidth="11.5"
+        android:strokeLineCap="round" />
+
+    <!-- ring: metallic gold, lit from the upper left -->
+    <path
+        android:pathData="M64.86,80.89 A29,29 0 1 1 80.89,64.86"
+        android:strokeWidth="8.0"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="32"
+                android:startY="32"
+                android:endX="82"
+                android:endY="84">
+                <item android:offset="0" android:color="#FFF8D68C" />
+                <item android:offset="0.35" android:color="#FFEEBA58" />
+                <item android:offset="0.72" android:color="#FFD49630" />
+                <item android:offset="1" android:color="#FFAA7018" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ring: specular ridge -->
+    <path
+        android:pathData="M64.86,80.89 A29,29 0 1 1 80.89,64.86"
+        android:strokeColor="#FFEFD199"
+        android:strokeAlpha="0.42"
+        android:strokeWidth="0.7"
+        android:strokeLineCap="round" />
+
+    <!-- tail -->
+    <path
+        android:pathData="M65.90,65.90 L77.11,77.11"
+        android:strokeColor="#60420E"
+        android:strokeWidth="11.8"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M65.90,65.90 L77.11,77.11"
+        android:strokeWidth="8.4"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="62"
+                android:startY="62"
+                android:endX="80"
+                android:endY="80">
+                <item android:offset="0" android:color="#FFEEBA58" />
+                <item android:offset="1" android:color="#FFD49630" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M65.90,65.90 L77.11,77.11"
+        android:strokeColor="#FFEFD199"
+        android:strokeAlpha="0.42"
+        android:strokeWidth="0.7"
+        android:strokeLineCap="round" />
+
+    <!-- bindu: the Attatva jewel -->
+    <path
+        android:pathData="M54,54m-6.1,0a6.1,6.1 0 1,0 12.2,0a6.1,6.1 0 1,0 -12.2,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="52"
+                android:centerY="52"
+                android:gradientRadius="8">
+                <item android:offset="0" android:color="#FFFFF3CE" />
+                <item android:offset="0.55" android:color="#FFE8B451" />
+                <item android:offset="1" android:color="#FF9A6B14" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

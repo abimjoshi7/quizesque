@@ -1,18 +1,34 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val localSupabaseProperties = Properties().apply {
+    rootProject.file(".gradle/gradle.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+}
+fun gradleStringLiteral(value: String) =
+    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
+val supabaseUrl = providers.gradleProperty("SUPABASE_URL")
+    .orElse(localSupabaseProperties.getProperty("SUPABASE_URL", "")).get()
+val supabaseAnonKey = providers.gradleProperty("SUPABASE_ANON_KEY")
+    .orElse(localSupabaseProperties.getProperty("SUPABASE_ANON_KEY", "")).get()
+
 android {
-    namespace = "com.example.quizmaster"
+    namespace = "com.abimatwork.quizesque"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.quizmaster"
+        applicationId = "com.abimatwork.quizesque"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "SUPABASE_URL", gradleStringLiteral(supabaseUrl))
+        buildConfigField("String", "SUPABASE_ANON_KEY", gradleStringLiteral(supabaseAnonKey))
     }
 
     buildTypes {
@@ -33,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
@@ -45,6 +62,11 @@ android {
 }
 
 dependencies {
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.5.4"))
+    implementation("io.github.jan-tennert.supabase:gotrue-kt")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-android:2.3.12")
+
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
