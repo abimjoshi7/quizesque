@@ -318,6 +318,34 @@ as $$
       )
 $$;
 
+-- A timed-out round still owes the player the answer. Same visibility rules as
+-- check_quiz_answer, minus the submitted option: the client only calls this once
+-- the round is already over, so it cannot be used to fish for answers early.
+create function public.reveal_quiz_answer(
+    p_question_id uuid,
+    p_version integer
+)
+returns table (correct_index smallint, explanation text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select q.correct_index, q.explanation
+    from public.quiz_questions q
+    where q.id = p_question_id
+      and q.version = p_version
+      and q.state = 'published'
+      and exists (
+          select 1
+          from public.question_pack_items pi
+          join public.question_packs p on p.id = pi.pack_id
+          where pi.question_id = q.id
+            and pi.question_version = q.version
+            and p.state = 'published'
+      )
+$$;
+
 -- Lock down direct access first. Content is read through constrained views.
 revoke all on public.quiz_categories, public.quiz_topics, public.question_packs,
     public.quiz_questions, public.question_pack_items, public.question_translations, public.user_profiles,
@@ -345,6 +373,8 @@ grant usage on type public.content_state, public.question_difficulty, public.que
     public.question_report_reason, public.report_state to anon, authenticated;
 revoke all on function public.check_quiz_answer(uuid, integer, smallint) from public;
 grant execute on function public.check_quiz_answer(uuid, integer, smallint) to anon, authenticated;
+revoke all on function public.reveal_quiz_answer(uuid, integer) from public;
+grant execute on function public.reveal_quiz_answer(uuid, integer) to anon, authenticated;
 
 alter table public.quiz_categories enable row level security;
 alter table public.quiz_topics enable row level security;
@@ -422,7 +452,7 @@ create policy "users submit own question reports" on public.question_reports
 insert into public.quiz_categories(id, title, description, sort_order) values
     ('gk', 'General Knowledge', 'World, science, history and more', 1),
     ('word', 'Word / Vocabulary', 'Meanings, synonyms and antonyms', 2),
-    ('sports', 'Sports', 'Cricket, football, tennis, Olympics and more', 3)
+    ('riddle', 'Riddles', 'Brainteasers, puzzles and wordplay', 3)
 on conflict (id) do update set
     title = excluded.title,
     description = excluded.description,
@@ -436,8 +466,8 @@ insert into public.quiz_topics(category_id, slug, title, description) values
     ('word', 'word.meanings', 'Meanings', 'Word meanings and usage'),
     ('word', 'word.synonyms-antonyms', 'Synonyms and Antonyms', 'Word relationships'),
     ('word', 'word.spelling-idioms', 'Spelling and Idioms', 'Spelling, phrases and idiomatic usage'),
-    ('sports', 'sports.cricket', 'Cricket', 'Cricket rules, players and history'),
-    ('sports', 'sports.football', 'Football', 'Football rules, clubs and history'),
-    ('sports', 'sports.olympics', 'Olympics', 'Olympic events and history'),
-    ('sports', 'sports.other', 'Other Sports', 'Tennis and other sports')
+    ('riddle', 'riddle.classic', 'Classic Riddles', 'What am I brainteasers and their answers'),
+    ('riddle', 'riddle.logic', 'Logic Puzzles', 'Deduction, patterns and number play'),
+    ('riddle', 'riddle.wordplay', 'Wordplay', 'Puns, anagrams and trick wording'),
+    ('riddle', 'riddle.lateral', 'Lateral Thinking', 'Unexpected angles and trick questions')
 on conflict (slug) do nothing;

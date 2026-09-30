@@ -250,10 +250,20 @@ fun QuizScreen(
                         .padding(18.dp)
                 ) {
                     Column {
-                        Text(
-                            "QUESTION ${(index + 1).toString().padStart(2, '0')}",
-                            color = Gold, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "QUESTION ${(index + 1).toString().padStart(2, '0')}",
+                                color = Gold, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
+                            )
+                            if (viewModel.isRemoteSession) {
+                                Spacer(Modifier.width(9.dp))
+                                Text(
+                                    "LIVE · SUPABASE",
+                                    color = Mint, fontSize = 8.sp, fontFamily = FontFamily.Monospace,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                        }
                         Spacer(Modifier.height(9.dp))
                         Text(
                             question.question,
@@ -271,13 +281,13 @@ fun QuizScreen(
                     optionIndex = optionIndex,
                     selected = viewModel.selectedOption,
                     correctIndex = question.correctIndex,
-                    locked = viewModel.isLocked
+                    locked = viewModel.isLocked || viewModel.isChecking
                 )
                 OptionButton(
                     text = option,
                     optionLabel = ('A' + optionIndex).toString(),
                     state = state,
-                    enabled = !viewModel.isLocked,
+                    enabled = !viewModel.isLocked && !viewModel.isChecking,
                     onClick = { viewModel.selectOption(optionIndex) }
                 )
                 Spacer(Modifier.height(9.dp))
@@ -288,6 +298,7 @@ fun QuizScreen(
                 FeedbackCard(
                     question = question,
                     selected = viewModel.selectedOption,
+                    revealPending = viewModel.isRevealing,
                     modifier = Modifier.graphicsLayer {
                         alpha = reveal
                     }
@@ -301,10 +312,18 @@ fun QuizScreen(
                 )
             } else {
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    "Lock in before the dial runs dry.",
-                    color = Muted, fontSize = 11.sp
-                )
+                if (viewModel.isChecking) {
+                    Text(
+                        "CHECKING ANSWER…",
+                        color = Gold, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp
+                    )
+                } else {
+                    Text(
+                        "Lock in before the dial runs dry.",
+                        color = Muted, fontSize = 11.sp
+                    )
+                }
             }
 
             Spacer(Modifier.height(26.dp))
@@ -330,6 +349,8 @@ private fun optionState(
     locked: Boolean
 ): OptionState {
     if (!locked) return OptionState.Default
+    // Remote rounds whose answer check failed: stay neutral instead of guessing.
+    if (correctIndex !in 0..3) return if (optionIndex == selected) OptionState.Default else OptionState.Disabled
     if (optionIndex == correctIndex) return OptionState.Correct
     if (optionIndex == selected) return OptionState.Wrong
     return OptionState.Disabled
@@ -404,6 +425,7 @@ private fun OptionButton(
                 RoundedCornerShape(15.dp)
             )
             .combinedClickable(
+                enabled = enabled,
                 onClick = {
                     pressed = true
                     onClick()
@@ -445,17 +467,23 @@ private fun OptionButton(
 private fun FeedbackCard(
     question: Question,
     selected: Int?,
+    revealPending: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val correct = selected != null && selected == question.correctIndex
+    val revealed = question.isAnswerRevealed
+    val correct = revealed && selected != null && selected == question.correctIndex
     val accent = if (correct) Mint else Ember
     val title = when {
         selected == null -> "TIME'S UP"
+        !revealed -> "NOT VERIFIED"
         correct -> "CORRECT"
         else -> "NOT QUITE"
     }
     val body = when {
-        selected == null -> "Correct answer: ${question.options[question.correctIndex]}. ${question.explanation}"
+        selected == null && revealed -> "Correct answer: ${question.options[question.correctIndex]}. ${question.explanation}"
+        selected == null && revealPending -> "Time's up — pulling the answer from Supabase…"
+        selected == null -> "Time's up — and the answer could not be loaded, so it stays unverified."
+        !revealed -> "Supabase did not confirm this answer, so the round counts as missed. Check your connection for the next one."
         correct -> question.explanation
         else -> "Correct answer: ${question.options[question.correctIndex]}. ${question.explanation}"
     }

@@ -45,7 +45,8 @@ fun QuizApp(quizViewModel: QuizViewModel = viewModel()) {
                 onCategoryClick = { category ->
                     quizViewModel.startQuiz(category)
                     navController.navigate("quiz/${category.id}")
-                }
+                },
+                onEnter = { quizViewModel.prefetch() }
             )
         }
         composable("quiz/{categoryId}") {

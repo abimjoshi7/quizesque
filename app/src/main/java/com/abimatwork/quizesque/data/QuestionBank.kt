@@ -6,7 +6,7 @@ import com.abimatwork.quizesque.model.QuizCategory.*
 
 object QuestionBank {
 
-    val all: List<Question> by lazy { gkQuestions + wordQuestions + sportsQuestions }
+    val all: List<Question> by lazy { gkQuestions + wordQuestions + riddleQuestions }
 
     fun byCategory(category: QuizCategory): List<Question> =
         all.filter { it.category == category }
@@ -164,77 +164,77 @@ object QuestionBank {
         )
     )
 
-    // ---------- 3. SPORTS (10) ----------
-    private val sportsQuestions = listOf(
+    // ---------- 3. RIDDLES (10) ----------
+    private val riddleQuestions = listOf(
         Question(
-            id = 201, category = SPORTS,
-            question = "How many players does a cricket team have on the field?",
-            options = listOf("9", "10", "11", "12"),
-            correctIndex = 2,
-            explanation = "A cricket team fields 11 players."
-        ),
-        Question(
-            id = 202, category = SPORTS,
-            question = "In which sport is the term 'Love' used for zero?",
-            options = listOf("Badminton", "Tennis", "Squash", "Table Tennis"),
-            correctIndex = 1,
-            explanation = "In tennis, 'love' means a score of zero."
-        ),
-        Question(
-            id = 203, category = SPORTS,
-            question = "How often are the Olympic Games held?",
-            options = listOf("Every 2 years", "Every 3 years", "Every 4 years", "Every 5 years"),
-            correctIndex = 2,
-            explanation = "The Olympics are held every 4 years."
-        ),
-        Question(
-            id = 204, category = SPORTS,
-            question = "In football, how many players does each team have on the pitch?",
-            options = listOf("9", "10", "11", "12"),
-            correctIndex = 2,
-            explanation = "Each football team plays with 11 players."
-        ),
-        Question(
-            id = 205, category = SPORTS,
-            question = "Which country invented table tennis?",
-            options = listOf("China", "Japan", "England", "USA"),
-            correctIndex = 2,
-            explanation = "Table tennis originated in England in the late 19th century."
-        ),
-        Question(
-            id = 206, category = SPORTS,
-            question = "What is the national sport of Japan?",
-            options = listOf("Karate", "Judo", "Sumo wrestling", "Baseball"),
-            correctIndex = 2,
-            explanation = "Sumo wrestling is Japan's national sport."
-        ),
-        Question(
-            id = 207, category = SPORTS,
-            question = "How many rings are there on the Olympic flag?",
-            options = listOf("4", "5", "6", "7"),
-            correctIndex = 1,
-            explanation = "Five interlocking rings represent the five continents."
-        ),
-        Question(
-            id = 208, category = SPORTS,
-            question = "In which sport would you perform a 'slam dunk'?",
-            options = listOf("Volleyball", "Tennis", "Basketball", "Baseball"),
-            correctIndex = 2,
-            explanation = "A slam dunk is a basketball shot."
-        ),
-        Question(
-            id = 209, category = SPORTS,
-            question = "What is the maximum break in snooker?",
-            options = listOf("147", "155", "100", "180"),
+            id = 201, category = RIDDLE,
+            question = "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
+            options = listOf("Echo", "Shadow", "Smoke", "Whistle"),
             correctIndex = 0,
-            explanation = "147 is the maximum possible standard break in snooker."
+            explanation = "An echo 'speaks' by bouncing sound back and needs no body of its own."
         ),
         Question(
-            id = 210, category = SPORTS,
-            question = "Which trophy is awarded for Test cricket series between England and Australia?",
-            options = listOf("World Cup", "The Ashes", "Champions Trophy", "Border-Gavaskar Trophy"),
+            id = 202, category = RIDDLE,
+            question = "The more you take, the more you leave behind. What am I?",
+            options = listOf("Memories", "Footsteps", "Photographs", "Souvenirs"),
             correctIndex = 1,
-            explanation = "England vs Australia Test series is played for The Ashes."
+            explanation = "Every step you take leaves another footprint behind you."
+        ),
+        Question(
+            id = 203, category = RIDDLE,
+            question = "What has keys but no locks, space but no room, and you can enter but cannot go inside?",
+            options = listOf("A theatre", "A keyboard", "A lift", "A library"),
+            correctIndex = 1,
+            explanation = "A keyboard has keys and space, yet you cannot physically enter it."
+        ),
+        Question(
+            id = 204, category = RIDDLE,
+            question = "I have cities but no houses, forests but no trees, and water but no fish. What am I?",
+            options = listOf("A dream", "A map", "A photograph", "A book"),
+            correctIndex = 1,
+            explanation = "A map shows places and features, but they are only drawings."
+        ),
+        Question(
+            id = 205, category = RIDDLE,
+            question = "What gets wetter the more it dries?",
+            options = listOf("A sponge", "A towel", "The rain", "Soap"),
+            correctIndex = 1,
+            explanation = "A towel absorbs water, so it becomes wet as it dries something else."
+        ),
+        Question(
+            id = 206, category = RIDDLE,
+            question = "What has one eye but cannot see?",
+            options = listOf("A needle", "A storm", "A potato", "A camera"),
+            correctIndex = 0,
+            explanation = "The hole of a needle is called its eye, though it has no sight."
+        ),
+        Question(
+            id = 207, category = RIDDLE,
+            question = "What runs but never walks, has a bed but never sleeps, and has a mouth but never speaks?",
+            options = listOf("A dog", "A river", "A clock", "A road"),
+            correctIndex = 1,
+            explanation = "A river runs, has a riverbed, and a mouth where it meets the sea."
+        ),
+        Question(
+            id = 208, category = RIDDLE,
+            question = "Forward I am heavy, backward I am not. What am I?",
+            options = listOf("Ton", "Note", "Peek", "Pots"),
+            correctIndex = 0,
+            explanation = "'Ton' is a heavy weight; spelled backwards it reads 'not'."
+        ),
+        Question(
+            id = 209, category = RIDDLE,
+            question = "I am an odd number. Take away a letter and I become even. What number am I?",
+            options = listOf("Nine", "Three", "Seven", "Five"),
+            correctIndex = 2,
+            explanation = "Remove the leading 's' from 'seven' and 'even' remains."
+        ),
+        Question(
+            id = 210, category = RIDDLE,
+            question = "What can travel around the world while staying in one corner?",
+            options = listOf("A stamp", "A kite", "A rumour", "Sunlight"),
+            correctIndex = 0,
+            explanation = "A postage stamp stays in the corner of an envelope yet crosses the world."
         )
     )
 }

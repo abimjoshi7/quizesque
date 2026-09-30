@@ -4,7 +4,7 @@ Native Android quiz app (Kotlin + Jetpack Compose + Material 3) with three segme
 
 1. **GK** — General Knowledge (10 questions)
 2. **Word** — Vocabulary: meanings, synonyms, antonyms, spelling, idioms (10 questions)
-3. **Sports** — Cricket, football, tennis, Olympics & more (10 questions)
+3. **Riddles** — Brainteasers, logic puzzles and wordplay (10 questions)
 
 ## Features
 - Animated **Attatva Games** studio splash (emblem reveal, letter animation, particles, loading bar)
@@ -17,6 +17,11 @@ Native Android quiz app (Kotlin + Jetpack Compose + Material 3) with three segme
   orbiting satellites, the Q mark at its core, monospace telemetry + typed arena name
   (`ui/components/StudioBootLoader.kt`). Long-press the round chip to replay it.
 - Home screen with 3 category cards
+- **Remote content**: pulls published questions from Supabase per segment and grades
+  them through the `check_quiz_answer` / `reveal_quiz_answer` RPCs, falling back to the
+  bundled bank whenever Supabase is unconfigured, empty or unreachable
+  (`data/ContentRepository.kt`). The question card shows `LIVE · SUPABASE` while a run
+  is served remotely.
 - Quiz screen: 30-second timer dial, per-round progress meter, live score
 - Instant feedback with explanation after each answer
 - Result screen: score, percentage, grade + full answer review
@@ -26,8 +31,10 @@ Native Android quiz app (Kotlin + Jetpack Compose + Material 3) with three segme
 ```
 app/src/main/java/com/abimatwork/quizesque/
   MainActivity.kt          # NavHost: home -> quiz/{id} -> result
-  model/Models.kt          # QuizCategory, Question, AnsweredQuestion
-  data/QuestionBank.kt     # 30 questions (10 per category)
+  model/Models.kt          # QuizCategory, Question, QuestionSource, AnsweredQuestion
+  data/QuestionBank.kt     # 30 bundled questions (10 per segment: gk, word, riddle)
+  data/SupabaseProvider.kt # optional Supabase client (null until configured)
+  data/ContentRepository.kt # published content + answer RPCs, offline fallback
   ui/QuizViewModel.kt      # quiz state machine
   ui/screens/HomeScreen.kt
   ui/screens/QuizScreen.kt
@@ -42,18 +49,18 @@ app/src/main/java/com/abimatwork/quizesque/
 ./gradlew assembleDebug
 # APK: app/build/outputs/apk/debug/app-debug.apk
 ./gradlew installDebug   # with device/emulator connected
+./scripts/run-emulator.sh # build, start an AVD if needed, install, and launch
 ```
 
-Requirements: Android SDK (compileSdk 34, minSdk 24), JDK 17.
+Requirements: Android SDK (compileSdk 34, minSdk 24), JDK 17. The runner uses the first configured AVD, or set `AVD_NAME` to choose one. Set `BOOT_TIMEOUT_SECONDS` to change its boot wait limit.
 `local.properties` already points to `/home/abim/Android/Sdk`.
 
 ## Supabase setup
 
-The app includes an optional Supabase client (Auth + PostgREST). The quiz still
-works offline when no Supabase settings are present. To configure it, add these
-Gradle properties to `~/.gradle/gradle.properties` (or a local, untracked
-`gradle.properties`). This checkout also reads `.gradle/gradle.properties`,
-which is ignored by Git:
+The app talks to Supabase for content, and still plays fully offline when it
+cannot. To configure it, add these Gradle properties to `~/.gradle/gradle.properties`
+(or a local, untracked `gradle.properties`). This checkout also reads
+`.gradle/gradle.properties`, which is ignored by Git:
 
 ```properties
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -63,10 +70,25 @@ SUPABASE_ANON_KEY=YOUR_PUBLISHABLE_OR_ANON_KEY
 Sync Gradle after setting them. `SupabaseProvider.client` is then available for
 repositories to use; it is `null` while configuration is missing. The client
 uses the public app key, so enable Row Level Security and write policies for
-every exposed table. Never put a `service_role` key in the Android app. The
-database migration and rollout notes are in
-[docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md). The current app does not
-yet fetch remote questions or sync player history.
+every exposed table. Never put a `service_role` key in the Android app.
+
+What the app does with a configured project:
+
+- `data/ContentRepository.kt` reads `published_quiz_content` per segment
+  (`gk`, `word`, `riddle`) when the home screen opens and when a run starts,
+  caches the result, and swaps it into a run while round one is still unanswered.
+- Remote rounds never ship an answer index. Options are graded through the
+  `check_quiz_answer` RPC; timed-out rounds fetch the answer through
+  `reveal_quiz_answer`.
+- If Supabase is unconfigured, empty, slow or unreachable, the run silently uses
+  the bundled `QuestionBank`. A failed answer check marks the round
+  `NOT VERIFIED` instead of guessing.
+- A run shows `LIVE · SUPABASE` on the question card when it is served remotely.
+
+Push the schema and load content with
+[docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md). Player history
+(`quiz_runs`, `quiz_run_answers`) exists in the schema but is still not written
+by the app.
 
 ## Add / edit questions
 Edit `data/QuestionBank.kt` — each `Question` needs 4 options, a `correctIndex` (0–3),

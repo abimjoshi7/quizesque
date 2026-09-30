@@ -80,7 +80,7 @@ fun ResultScreen(viewModel: QuizViewModel, onPlayAgain: () -> Unit, onHome: () -
             Spacer(Modifier.height(4.dp))
         }
         items(viewModel.answers) { answered ->
-            val tone = if (answered.isCorrect) Green else Red
+            val tone = if (answered.isCorrect) Green else if (answered.question.isAnswerRevealed) Red else Muted
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Panel).border(1.dp, Color.White.copy(alpha = .05f), RoundedCornerShape(14.dp)).padding(14.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Icon(if (answered.isCorrect) Icons.Filled.Check else Icons.Filled.Close, null, tint = tone, modifier = Modifier.size(17.dp))
@@ -88,8 +88,15 @@ fun ResultScreen(viewModel: QuizViewModel, onPlayAgain: () -> Unit, onHome: () -
                     Text(answered.question.question, Modifier.weight(1f), color = Color.White, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(Modifier.height(9.dp))
-                Text("YOU  ·  ${answered.selectedIndex?.let { answered.question.options[it] } ?: "SKIPPED / TIME OUT"}", color = if (answered.isCorrect) Green else Red, fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = .3.sp)
-                if (!answered.isCorrect) Text("ANSWER  ·  ${answered.question.options[answered.question.correctIndex]}", color = Color.White.copy(alpha = .85f), fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = .3.sp)
+                val verified = answered.question.isAnswerRevealed
+                Text("YOU  ·  ${answered.selectedIndex?.let { answered.question.options[it] } ?: "SKIPPED / TIME OUT"}", color = if (answered.isCorrect) Green else if (verified) Red else Muted, fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = .3.sp)
+                if (!answered.isCorrect) {
+                    Text(
+                        if (verified) "ANSWER  ·  ${answered.question.options[answered.question.correctIndex]}"
+                        else "ANSWER  ·  NOT VERIFIED",
+                        color = Color.White.copy(alpha = .85f), fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = .3.sp
+                    )
+                }
             }
         }
         item { Spacer(Modifier.height(16.dp)) }

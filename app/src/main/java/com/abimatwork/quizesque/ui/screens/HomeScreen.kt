@@ -17,7 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -43,9 +43,13 @@ private val Gold = Color(0xFFF3BD55)
 private val Muted = Color(0xFF92999C)
 
 @Composable
-fun HomeScreen(onCategoryClick: (QuizCategory) -> Unit) {
+fun HomeScreen(onCategoryClick: (QuizCategory) -> Unit, onEnter: () -> Unit = {}) {
     var entered by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(70); entered = true }
+    LaunchedEffect(Unit) {
+        onEnter()
+        delay(70)
+        entered = true
+    }
     Box(Modifier.fillMaxSize().background(Ink)) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(Brush.radialGradient(listOf(Color(0xFF4D3516).copy(alpha = .28f), Color.Transparent), radius = size.width * .8f), radius = size.width * .8f, center = androidx.compose.ui.geometry.Offset(size.width * .9f, size.height * .05f))
@@ -87,7 +91,7 @@ fun HomeScreen(onCategoryClick: (QuizCategory) -> Unit) {
             val cats = listOf(
                 Triple(QuizCategory.GK, Icons.Filled.Lightbulb, "01"),
                 Triple(QuizCategory.WORD, Icons.Filled.Abc, "02"),
-                Triple(QuizCategory.SPORTS, Icons.Filled.SportsSoccer, "03")
+                Triple(QuizCategory.RIDDLE, Icons.Filled.Extension, "03")
             )
             cats.forEachIndexed { i, (category, icon, number) ->
                 AnimatedVisibility(visible = entered, enter = fadeIn(tween(420, delayMillis = 100 + i * 110)) + slideInVertically(tween(450, delayMillis = 100 + i * 110)) { it / 3 }) {

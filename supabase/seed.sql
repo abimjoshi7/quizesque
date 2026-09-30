@@ -1,0 +1,4 @@
+-- Local development seed for `supabase db reset`.
+-- Editorial content lives in supabase/migrations/ and is published to a remote
+-- project through the runbook in docs/SUPABASE_DATABASE.md; keep secrets out of
+-- this file.

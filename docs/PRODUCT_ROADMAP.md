@@ -219,7 +219,7 @@ Keep all existing signals. Add:
 
 ## Open questions
 
-- Which exam segment converts first (GK vs Word vs Sports)? Instrument pack
+- Which exam segment converts first (GK vs Words vs Riddles)? Instrument pack
   page views before committing content budget.
 - Is Focus-as-clue or Focus-as-shield more understood? A/B test wording, not
   drop rates.

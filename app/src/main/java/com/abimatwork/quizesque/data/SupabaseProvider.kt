@@ -11,6 +11,10 @@ import io.github.jan.supabase.postgrest.Postgrest
  * settings have not been supplied in Gradle properties.
  */
 object SupabaseProvider {
+    /** True once a project URL and key have been supplied through Gradle properties. */
+    val isConfigured: Boolean
+        get() = BuildConfig.SUPABASE_URL.isNotBlank() && BuildConfig.SUPABASE_ANON_KEY.isNotBlank()
+
     val client: SupabaseClient? by lazy {
         val url = BuildConfig.SUPABASE_URL.trim()
         val anonKey = BuildConfig.SUPABASE_ANON_KEY.trim()
