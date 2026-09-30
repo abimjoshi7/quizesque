@@ -26,7 +26,7 @@ the current app flow; sync should only be added behind an explicit opt-in.
 
 | Call | Purpose |
 | --- | --- |
-| `GET published_quiz_content?category_id=eq.{segment}` | Questions for one segment, `locale=en-IN`, ordered by `pack_position`, capped at 10 usable rows. Columns: `question_id`, `version`, `prompt`, `options`, `explanation` — never `correct_index`. |
+| `GET published_quiz_content?category_id=eq.{segment}` | Questions for one segment, `locale=en-IN`, ordered by `pack_position`, capped at 1,000 rows per category. The app rotates through this pool on-device, preferring unseen questions and beginning a new shuffled cycle after exhaustion. Columns: `question_id`, `version`, `prompt`, `options`, `explanation` — never `correct_index`. |
 | `POST rpc/check_quiz_answer` | Grades the option the player just locked in; returns `is_correct`, `correct_index`, `explanation`. |
 | `POST rpc/reveal_quiz_answer` | Fetches the answer for a round that ran out of time. |
 
@@ -86,6 +86,31 @@ yet — the app plays its bundled questions until that changes.
 
 ## First content release
 
+The initial editorial batch is in `supabase/content/launch-v1-review.sql`:
+10 general-knowledge questions, 10 vocabulary questions, and 10 original logic
+riddles. Run it with a trusted SQL role after the foundation migration. It is
+idempotent and deliberately leaves questions in `review` and the pack in
+`draft`, so none of the batch becomes visible in the app before editorial
+approval.
+
+For each approved question, set `reviewed_by` to the reviewing editor's
+`auth.users` UUID and set `reviewed_at`. After all questions in the pack pass
+review, publish the questions and pack in the same transaction:
+
+```sql
+begin;
+update public.quiz_questions q
+   set state = 'published', reviewed_by = 'REVIEWER_UUID'::uuid, reviewed_at = now()
+  from public.question_pack_items pi
+ where pi.pack_id = (select id from public.question_packs where slug = 'launch-v1-review')
+   and pi.question_id = q.id and pi.question_version = q.version
+   and q.state = 'review';
+update public.question_packs
+   set state = 'published', published_at = now()
+ where slug = 'launch-v1-review';
+commit;
+```
+
 The app only sees a question once it sits in a **published** pack, its topic is
 active, and the row itself is `published` — which requires a reviewer and a
 review timestamp. Factual questions additionally need a source URL, source grade
@@ -127,9 +152,10 @@ update public.quiz_questions
  where prompt like 'I speak without a mouth%';
 ```
 
-Repeat per question, then re-run the `curl` check above. Keeping every segment
-(`gk`, `word`, `riddle`) at ten published questions matches the "ten rounds each"
-promise on the home screen; the app takes at most ten per run anyway.
+Repeat per question, then re-run the `curl` check above. The app serves up to ten
+questions per run. Aim for at least 50 published questions in each segment
+(`gk`, `word`, `riddle`) for five full runs before questions repeat; a larger pool
+continues extending the rotation, up to the 1,000-row client fetch limit per segment.
 
 ## Not covered yet
 

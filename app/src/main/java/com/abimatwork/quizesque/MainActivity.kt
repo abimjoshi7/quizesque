@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.abimatwork.quizesque.data.ContentRepository
 import com.abimatwork.quizesque.model.QuizCategory
 import com.abimatwork.quizesque.ui.QuizViewModel
 import com.abimatwork.quizesque.ui.screens.HomeScreen
@@ -19,6 +20,7 @@ import com.abimatwork.quizesque.ui.theme.QUIZesqueTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ContentRepository.initialize(applicationContext)
         setContent {
             QUIZesqueTheme {
                 QuizApp()

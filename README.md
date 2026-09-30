@@ -19,7 +19,9 @@ Native Android quiz app (Kotlin + Jetpack Compose + Material 3) with three segme
 - Home screen with 3 category cards
 - **Remote content**: pulls published questions from Supabase per segment and grades
   them through the `check_quiz_answer` / `reveal_quiz_answer` RPCs, falling back to the
-  bundled bank whenever Supabase is unconfigured, empty or unreachable
+  bundled bank whenever Supabase is unconfigured, empty or unreachable. Remote runs
+  rotate through the published pool without repeating questions until that category's
+  pool is exhausted; progress is saved on the device
   (`data/ContentRepository.kt`). The question card shows `LIVE · SUPABASE` while a run
   is served remotely.
 - Quiz screen: 30-second timer dial, per-round progress meter, live score

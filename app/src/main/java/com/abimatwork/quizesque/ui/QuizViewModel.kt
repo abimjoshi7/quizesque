@@ -62,7 +62,7 @@ class QuizViewModel : ViewModel() {
     fun prefetch() {
         if (!ContentRepository.isConfigured) return
         viewModelScope.launch {
-            QuizCategory.entries.forEach { ContentRepository.load(it) }
+            QuizCategory.entries.forEach { ContentRepository.prepare(it) }
         }
     }
 

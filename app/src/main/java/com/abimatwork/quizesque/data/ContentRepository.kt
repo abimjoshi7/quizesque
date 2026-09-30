@@ -1,5 +1,7 @@
 package com.abimatwork.quizesque.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.abimatwork.quizesque.model.Question
 import com.abimatwork.quizesque.model.QuestionSource
@@ -70,18 +72,33 @@ object ContentRepository {
 
     /** Home screen promises "ten rounds each", so a run never exceeds this. */
     private const val MAX_PER_RUN = 10
-    /** Rows pulled per category; more than [MAX_PER_RUN] distinct questions is wasted work. */
-    private const val MAX_ROWS = 30
+    /** Fetch a large pool so each run can draw from a rotating set. */
+    private const val MAX_ROWS = 1_000
+    private const val ROTATION_PREFS = "question_rotation"
 
     private const val UNANSWERED = -1
 
     private val cache = ConcurrentHashMap<String, List<Question>>()
+    private val rotationLock = Any()
+    @Volatile private var rotationPreferences: SharedPreferences? = null
 
     val isConfigured: Boolean get() = SupabaseProvider.isConfigured
 
-    /** Already-fetched content for this category, shuffled for replay. */
+    /** Set up persistent rotation tracking before content is requested. */
+    fun initialize(context: Context) {
+        rotationPreferences = context.applicationContext
+            .getSharedPreferences(ROTATION_PREFS, Context.MODE_PRIVATE)
+    }
+
+    /** Pick the next run from the cached pool, preferring questions not seen this cycle. */
     fun cached(category: QuizCategory): List<Question>? =
-        cache[category.id]?.shuffled()
+        cache[category.id]?.let { nextRun(category, it) }
+
+    /** Warm the pool without consuming questions from the rotation. */
+    suspend fun prepare(category: QuizCategory) {
+        if (cache.containsKey(category.id)) return
+        fetchPool(category)
+    }
 
     /**
      * Fetch published questions for a category.
@@ -89,7 +106,13 @@ object ContentRepository {
      * timeout, or no published content) so callers can fall back offline.
      */
     suspend fun load(category: QuizCategory): List<Question>? {
-        cache[category.id]?.let { return it.shuffled() }
+        cache[category.id]?.let { return nextRun(category, it) }
+        val pool = fetchPool(category) ?: return null
+        return nextRun(category, pool)
+    }
+
+    private suspend fun fetchPool(category: QuizCategory): List<Question>? {
+        cache[category.id]?.let { return it }
         val client = SupabaseProvider.client ?: return null
 
         val rows = try {
@@ -113,7 +136,6 @@ object ContentRepository {
         val questions = rows.asSequence()
             .distinctBy { it.questionId }
             .filter { it.questionId.isNotBlank() && it.options.size == 4 }
-            .take(MAX_PER_RUN)
             .mapIndexed { position, row ->
                 Question(
                     id = position,
@@ -132,7 +154,46 @@ object ContentRepository {
             return null
         }
         cache[category.id] = questions
-        return questions.shuffled()
+        return questions
+    }
+
+    /**
+     * Serve unseen questions first, then top up from seen questions when fewer
+     * than one run remain. Once the whole pool has been used, start a new
+     * shuffled cycle so play can continue indefinitely.
+     */
+    private fun nextRun(category: QuizCategory, pool: List<Question>): List<Question> =
+        synchronized(rotationLock) {
+            val prefs = rotationPreferences
+            val key = "seen_${category.id}"
+            val seen = prefs?.getStringSet(key, mutableSetOf())
+                ?.toMutableSet() ?: mutableSetOf()
+            val validKeys = pool.mapTo(mutableSetOf(), ::rotationKey)
+            seen.retainAll(validKeys)
+
+            val unseen = pool.filter { rotationKey(it) !in seen }.shuffled()
+            val batch = if (unseen.isEmpty()) {
+                // Every published question has been used; begin another cycle.
+                seen.clear()
+                pool.shuffled().take(MAX_PER_RUN)
+            } else {
+                val selected = unseen.take(MAX_PER_RUN)
+                val remainingSlots = MAX_PER_RUN - selected.size
+                selected + if (remainingSlots > 0) {
+                    pool.filter { rotationKey(it) in seen }.shuffled().take(remainingSlots)
+                } else {
+                    emptyList()
+                }
+            }
+
+            seen.addAll(batch.map(::rotationKey))
+            prefs?.edit()?.putStringSet(key, seen)?.apply()
+            batch
+        }
+
+    private fun rotationKey(question: Question): String = when (val source = question.source) {
+        is QuestionSource.Remote -> "${source.questionId}:${source.version}"
+        QuestionSource.Bundled -> "bundled:${question.category.id}:${question.id}"
     }
 
     /** Ask the database whether [selectedIndex] was right. Null when it could not be checked. */
