@@ -109,3 +109,10 @@ python3 tools/make_launcher_icons.py --preview out.png  # large proof sheet
 ## Product direction
 See [the QUIZesque product roadmap](docs/PRODUCT_ROADMAP.md) for the proposed
 Confidence Plays mechanic, learning-first expansion phases, and product guardrails.
+
+## Monetization & Play policy
+[docs/MONETIZATION_NEPAL.md](docs/MONETIZATION_NEPAL.md) explains what a Nepal-registered
+Play Console account can and cannot earn: merchant registration is unavailable for
+Nepal (no Play Billing, no paid apps), AdMob is fully available and pays to Nepali
+banks by wire, and every policy-sanctioned route to user-paid digital content is
+mapped with costs and risks. Read it before designing any monetization feature.

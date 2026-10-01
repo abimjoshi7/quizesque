@@ -93,6 +93,48 @@ idempotent and deliberately leaves questions in `review` and the pack in
 `draft`, so none of the batch becomes visible in the app before editorial
 approval.
 
+The second rotation batch is in `supabase/content/launch-v2-review.sql`: it adds
+40 more questions in each category (120 total), with deterministic IDs so it can
+be rerun safely. Run the file in the SQL Editor with a trusted role. It creates
+a separate `launch-v2-review` draft pack and leaves all 120 questions in
+`review`; check the question wording, answer choices, and cited sources before
+publishing. The app will start drawing from the expanded pool after this pack
+and its questions are published.
+
+After editorial review, publish the whole v2 pack in one transaction. Replace
+`REVIEWER_UUID` with the reviewing editor's `auth.users` UUID. The guard aborts
+if the pack does not contain exactly 120 review questions:
+
+```sql
+begin;
+do $$
+declare
+    v_pack_id uuid;
+    v_review_count integer;
+begin
+    select id into strict v_pack_id
+      from public.question_packs where slug = 'launch-v2-review';
+    select count(*) into v_review_count
+      from public.question_pack_items as pi
+      join public.quiz_questions as q
+        on q.id = pi.question_id and q.version = pi.question_version
+     where pi.pack_id = v_pack_id and q.state = 'review';
+    if v_review_count <> 120 then
+        raise exception 'Expected 120 review questions in launch-v2-review, found %', v_review_count;
+    end if;
+end $$;
+update public.quiz_questions as q
+   set state = 'published', reviewed_by = 'REVIEWER_UUID'::uuid, reviewed_at = now()
+  from public.question_pack_items as pi
+ where pi.pack_id = (select id from public.question_packs where slug = 'launch-v2-review')
+   and pi.question_id = q.id and pi.question_version = q.version
+   and q.state = 'review';
+update public.question_packs
+   set state = 'published', published_at = now()
+ where slug = 'launch-v2-review';
+commit;
+```
+
 For each approved question, set `reviewed_by` to the reviewing editor's
 `auth.users` UUID and set `reviewed_at`. After all questions in the pack pass
 review, publish the questions and pack in the same transaction:
